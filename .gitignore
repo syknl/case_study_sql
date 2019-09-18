@@ -405,4 +405,4 @@ ASALocalRun/
 .localhistory/
 
 # Sayaka made this change
-app.config
+case_study_sql/app.config
