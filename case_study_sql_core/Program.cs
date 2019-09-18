@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using Npgsql;
 using System.Text.RegularExpressions;
 using System.Transactions;
@@ -9,53 +10,53 @@ namespace case_study_sql_core
 {
     public class Program
     {
-        //static void Main(string[] args)
-        //{
-        //    //SQL procedure is called
-        //    Console.WriteLine("Hello World!");
-        //}
         static void Main(String[] args)
         {
 
-            // 1. Receive name from the console
-            // Limit of name length.
-            const int length_limit = 20;
-
+            //1. Receive name from the console
+            const int length_limit = 20; // Limit of name length.
             string first_name = Get_input("What is your first name?", length_limit);
             string last_name = Get_input("What is your last name?", length_limit);
 
-            // 2. Calculate the fizzbuzz_like logic using stored procedure.
-
-
-
-            //SQL処理で用いる変数を予め宣言
-            NpgsqlCommand cmd = null;
+            //Define variables for SQL.
             string cmd_str = null;
-            DataTable dt = null;
-            NpgsqlDataAdapter da = null;
-            NpgsqlCommand reader = null;
 
-            //接続文字列
-            string conn_str = "Server=localhost;Port=5432;User ID=sayaka;Database=postgres;Password=postgres;Enlist=true";
+            //Connection variable
+            var connectionString = ConfigurationManager.ConnectionStrings["caseStudyDB"].ConnectionString;
 
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
 
-            //TransactionScopeの利用
-            //using (TransactionScope ts = new TransactionScope())
-            //{
-                //接続その1
-                using (NpgsqlConnection conn = new NpgsqlConnection(conn_str))
+            //2. Calculate the fizzbuzz_like logic using stored procedure.
+
+                //Create table using stored procedure.
+                var table_name = "fizzbuzz_like_table";
+                cmd_str = "CALL create_table('" + table_name + "')";
+                //Console.WriteLine(cmd_str); //DEBUG
+                using (var cmd = new NpgsqlCommand(cmd_str, conn))
+                    cmd.ExecuteNonQuery();
+
+                //Enter 1 to 100 to the table and calculate using stored procedure.
+                cmd_str = "CALL fizzbuzz_calc('" + table_name + "', '" + first_name + "', '" + last_name + "')";
+                using (var cmd = new NpgsqlCommand(cmd_str, conn))
+                    cmd.ExecuteNonQuery();
+
+             //3. Output the results using stored procedure.
+                //cmd_str = "select * from " + table_name + " order by num";
+                cmd_str = "select * from " + table_name + " order by num";
+                using (var cmd = new NpgsqlCommand(cmd_str, conn))
+                using (var reader = cmd.ExecuteReader())
                 {
-                    //PostgreSQLへ接続後、INSERT、DELETE処理を実施し、SELECT結果を取得
-                    conn.Open();
+                    while (reader.Read())
+                    {
+                        Console.Write(reader.GetInt32(0));
+                        Console.Write(" ");
+                        Console.WriteLine(reader.GetString(1));
+                    }
+                }
 
-
-                    //2. ストアドプロシージャで1から100まで入れる
-                    //Create Table;
-                    var table_name = "fizzbuzz_like_table";
-
-                    cmd_str = "CALL create_table('" + table_name + "')";
-                    Console.WriteLine(cmd_str); //DEBUG
-
+                //
                 //using (var cmd = new NpgsqlCommand(cmd_str, conn))
                 //using (var reader = cmd.ExecuteReader())
                 //{
@@ -65,20 +66,14 @@ namespace case_study_sql_core
 
 
 
-                    cmd = new NpgsqlCommand(cmd_str, conn);
-                    cmd.ExecuteNonQuery();
 
-                    //Calculate
-                    cmd_str = "CALL fizzbuzz_calc('" + table_name + "', '" + first_name +"', '" + last_name + "')";
-                    cmd = new NpgsqlCommand(cmd_str, conn);
-                    cmd.ExecuteNonQuery();
+
+
 
 
 
                 //3. アウトプットもストアドプロシージャで。すなわちselect文で順番に並べる。
-                    cmd_str = "select * from " + table_name + " order by num";
-                    cmd = new NpgsqlCommand(cmd_str, conn);
-                    reader = cmd.ExecuteReader();
+
 
 
                 ////Delete test_table if exists.
