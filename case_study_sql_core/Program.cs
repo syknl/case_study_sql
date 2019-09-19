@@ -9,11 +9,11 @@ namespace case_study_sql_core
     {
         public static void Main()
         {
-            const int nameLengthMax = 20;
+            const int nameLengthLimit = 20;
 
             //1. Receive name from the console
-            string firstName = GetInput("What is your first name?", nameLengthMax);
-            string lastName = GetInput("What is your last name?", nameLengthMax);
+            string firstName = GetInput("What is your first name?", nameLengthLimit);
+            string lastName = GetInput("What is your last name?", nameLengthLimit);
 
             //Define variables for SQL.
             string cmdStr = null;
@@ -51,13 +51,13 @@ namespace case_study_sql_core
 
         }
 
-        public static string GetInput(string message, int lengthLimit)
+        public static string GetInput(string message, int nameLengthLimit)
         {
             Console.WriteLine(message);
             string name = Console.ReadLine();
 
             //Checking the length and character type, only alphabets are accepted.
-            if (!IsLessThanLimit(name, lengthLimit) || !IsAlphabet(name))
+            if (!IsLessThanLimit(name, nameLengthLimit) || !IsAlphabet(name))
             {
                 Environment.Exit(0);
             }
@@ -83,7 +83,7 @@ namespace case_study_sql_core
             bool boolV = true;
             if (!Regex.IsMatch(name, @"^[a-zA-Z]+$"))
             {
-                Console.WriteLine("Please enter only alphabets.");
+                Console.WriteLine("Please enter only alphabetical charaters.");
                 boolV = false;
             }
             return boolV;
